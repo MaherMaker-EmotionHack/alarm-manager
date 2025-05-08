@@ -22,6 +22,21 @@ allprojects {
         google()
         mavenCentral()
     }
+
+    // Apply Java toolchain to all Java projects (including Android app and libraries)
+    afterEvaluate { project ->
+        if (project.plugins.hasPlugin('java') ||
+            project.plugins.hasPlugin('java-library') ||
+            project.plugins.hasPlugin('com.android.application') ||
+            project.plugins.hasPlugin('com.android.library')) {
+            
+            project.java {
+                toolchain {
+                    languageVersion = JavaLanguageVersion.of(21)
+                }
+            }
+        }
+    }
 }
 
 task clean(type: Delete) {

@@ -44,6 +44,7 @@ public class AlarmForegroundService extends Service {
             String alarmId = intent.getStringExtra("alarmId");
             String name = intent.getStringExtra("name");
             long atTime = intent.getLongExtra("at", System.currentTimeMillis());
+            String uiOptionsJson = intent.getStringExtra("uiOptions"); // Retrieve uiOptions
             // String soundUri = intent.getStringExtra("soundUri"); // Will be used by AlarmRingingActivity
 
             Log.i(TAG, "Processing alarm: ID=" + alarmId + ", Name=" + name);
@@ -67,6 +68,9 @@ public class AlarmForegroundService extends Service {
             activityIntent.putExtra("alarmId", alarmId);
             activityIntent.putExtra("name", name);
             activityIntent.putExtra("at", atTime);
+            if (uiOptionsJson != null) {
+                activityIntent.putExtra("uiOptions", uiOptionsJson); // Forward uiOptions to Activity
+            }
             // activityIntent.putExtra("soundUri", soundUri);
             activityIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 

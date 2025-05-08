@@ -7,6 +7,7 @@ import android.app.NotificationManager; // Added this import
 import android.app.PendingIntent; // Added this import
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color; // Import Color
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -19,13 +20,18 @@ import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.View; // Import View
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.RelativeLayout; // Import RelativeLayout
 import android.widget.TextView;
 import android.widget.Toast; // Added this import
 
 import androidx.core.app.NotificationCompat; // Added this import
 import androidx.appcompat.app.AppCompatActivity;
+
+import org.json.JSONObject; // Import JSONObject
+import org.json.JSONException; // Import JSONException
 
 import java.io.IOException;
 import java.text.SimpleDateFormat; // Added this import
@@ -69,20 +75,53 @@ public class AlarmRingingActivity extends AppCompatActivity {
         setContentView(R.layout.activity_alarm_ringing);
 
         TextView alarmNameTextView = findViewById(R.id.alarm_name_text_view);
+        TextView alarmRingingTitleTextView = findViewById(R.id.alarm_ringing_title);
         Button dismissButton = findViewById(R.id.dismiss_button);
         Button snoozeButton = findViewById(R.id.snooze_button);
+        RelativeLayout layout = findViewById(R.id.alarm_ringing_layout);
 
         Intent intent = getIntent();
         alarmId = intent.getStringExtra("alarmId");
-        alarmName = intent.getStringExtra("name");
+        alarmName = intent.getStringExtra("name"); // General alarm name from parameters
+        String uiOptionsJson = intent.getStringExtra("uiOptions");
 
-        if (alarmName != null) {
-            alarmNameTextView.setText(alarmName);
-        } else {
-            alarmNameTextView.setText("Alarm");
+        Log.d(TAG, "Received alarmId: " + alarmId + ", alarmName: " + alarmName);
+        Log.d(TAG, "Received uiOptionsJson: " + (uiOptionsJson != null ? uiOptionsJson : "null"));
+
+        // Texts are initially set by XML defaults from setContentView(R.layout.activity_alarm_ringing)
+
+        boolean alarmNameTextWasSetByUiOptions = false;
+
+        // Apply UI customizations from uiOptionsJson if present
+        if (uiOptionsJson != null && !uiOptionsJson.isEmpty()) {
+            try {
+                JSONObject uiOptions = new JSONObject(uiOptionsJson);
+                applyUiOptions(uiOptions, layout, alarmRingingTitleTextView, alarmNameTextView, dismissButton, snoozeButton);
+
+                if (uiOptions.has("alarmNameText") && !uiOptions.optString("alarmNameText").isEmpty()) {
+                    alarmNameTextWasSetByUiOptions = true;
+                }
+
+            } catch (JSONException e) {
+                Log.e(TAG, "Error parsing UI options JSON in onCreate", e);
+            }
         }
 
-        Log.d(TAG, "Alarm ID: " + alarmId + ", Name: " + alarmName);
+        // Fallback for alarmNameTextView if not set by uiOptions.alarmNameText
+        if (!alarmNameTextWasSetByUiOptions) {
+            if (alarmName != null && !alarmName.isEmpty()) {
+                alarmNameTextView.setText(alarmName); // Use intent's alarmName
+            } else {
+                if (alarmNameTextView.getText() == null ||
+                    alarmNameTextView.getText().toString().isEmpty() ||
+                    alarmNameTextView.getText().toString().equals(getString(R.string.default_alarm_name_xml))) {
+                    alarmNameTextView.setText(getString(R.string.default_alarm_name_fallback));
+                }
+            }
+        }
+
+        Log.d(TAG, "Final Alarm Title: " + alarmRingingTitleTextView.getText().toString());
+        Log.d(TAG, "Final Alarm Name Displayed: " + alarmNameTextView.getText().toString());
 
         // Default sound if not specified
         alarmSoundUri = intent.getStringExtra("soundUri");
@@ -97,22 +136,104 @@ public class AlarmRingingActivity extends AppCompatActivity {
         Log.d(TAG, "onCreate finished");
     }
 
+    private void applyUiOptions(JSONObject uiOptions, RelativeLayout layout, TextView titleView, TextView nameView, Button dismissButton, Button snoozeButton) {
+        Log.d(TAG, "Applying UI options: " + uiOptions.toString());
+        try {
+            if (uiOptions.has("backgroundColor")) {
+                String bgColor = uiOptions.optString("backgroundColor");
+                if (bgColor != null && !bgColor.isEmpty()) {
+                    Log.d(TAG, "Setting backgroundColor: " + bgColor);
+                    layout.setBackgroundColor(Color.parseColor(bgColor));
+                }
+            }
+
+            String titleText = uiOptions.optString("titleText");
+            if (titleText != null && !titleText.isEmpty()) {
+                Log.d(TAG, "Setting titleText: " + titleText);
+                titleView.setText(titleText);
+            } else {
+                Log.d(TAG, "titleText not found or empty in uiOptions, using XML default: " + titleView.getText());
+            }
+
+            String titleColor = uiOptions.optString("titleColor");
+            if (titleColor != null && !titleColor.isEmpty()) {
+                Log.d(TAG, "Setting titleColor: " + titleColor);
+                titleView.setTextColor(Color.parseColor(titleColor));
+            }
+
+            String alarmNameOptText = uiOptions.optString("alarmNameText");
+            if (alarmNameOptText != null && !alarmNameOptText.isEmpty()) {
+                Log.d(TAG, "Setting alarmNameText from uiOptions: " + alarmNameOptText);
+                nameView.setText(alarmNameOptText);
+            } else {
+                Log.d(TAG, "alarmNameText not found or empty in uiOptions. Current nameView text: " + nameView.getText());
+            }
+
+            String alarmNameOptColor = uiOptions.optString("alarmNameColor");
+            if (alarmNameOptColor != null && !alarmNameOptColor.isEmpty()) {
+                Log.d(TAG, "Setting alarmNameColor: " + alarmNameOptColor);
+                nameView.setTextColor(Color.parseColor(alarmNameOptColor));
+            }
+
+            String dismissText = uiOptions.optString("dismissButtonText");
+            if (dismissText != null && !dismissText.isEmpty()) {
+                Log.d(TAG, "Setting dismissButtonText: " + dismissText);
+                dismissButton.setText(dismissText);
+            }
+            if (uiOptions.has("dismissButtonBackgroundColor")) {
+                String bgColor = uiOptions.optString("dismissButtonBackgroundColor");
+                if (bgColor != null && !bgColor.isEmpty()) {
+                    Log.d(TAG, "Setting dismissButtonBackgroundColor: " + bgColor);
+                    dismissButton.setBackgroundColor(Color.parseColor(bgColor));
+                }
+            }
+            if (uiOptions.has("dismissButtonTextColor")) {
+                String textColor = uiOptions.optString("dismissButtonTextColor");
+                if (textColor != null && !textColor.isEmpty()) {
+                    Log.d(TAG, "Setting dismissButtonTextColor: " + textColor);
+                    dismissButton.setTextColor(Color.parseColor(textColor));
+                }
+            }
+
+            String snoozeText = uiOptions.optString("snoozeButtonText");
+            if (snoozeText != null && !snoozeText.isEmpty()) {
+                Log.d(TAG, "Setting snoozeButtonText: " + snoozeText);
+                snoozeButton.setText(snoozeText);
+            }
+            if (uiOptions.has("snoozeButtonBackgroundColor")) {
+                String bgColor = uiOptions.optString("snoozeButtonBackgroundColor");
+                if (bgColor != null && !bgColor.isEmpty()) {
+                    Log.d(TAG, "Setting snoozeButtonBackgroundColor: " + bgColor);
+                    snoozeButton.setBackgroundColor(Color.parseColor(bgColor));
+                }
+            }
+            if (uiOptions.has("snoozeButtonTextColor")) {
+                String textColor = uiOptions.optString("snoozeButtonTextColor");
+                if (textColor != null && !textColor.isEmpty()) {
+                    Log.d(TAG, "Setting snoozeButtonTextColor: " + textColor);
+                    snoozeButton.setTextColor(Color.parseColor(textColor));
+                }
+            }
+
+        } catch (IllegalArgumentException e) {
+            Log.e(TAG, "Error parsing color string in UI options", e);
+        }
+    }
+
     private void startAlarmSoundAndVibration() {
         Log.d(TAG, "Starting alarm sound and vibration. Sound URI: " + alarmSoundUri);
-        // Start Vibration
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         if (vibrator != null && vibrator.hasVibrator()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createWaveform(VIBRATION_PATTERN, 0)); // 0 for repeating
+                vibrator.vibrate(VibrationEffect.createWaveform(VIBRATION_PATTERN, 0));
             } else {
-                vibrator.vibrate(VIBRATION_PATTERN, 0); // 0 for repeating
+                vibrator.vibrate(VIBRATION_PATTERN, 0);
             }
             Log.d(TAG, "Vibration started.");
         } else {
             Log.w(TAG, "Vibrator not available or doesn't have vibrator functionality.");
         }
 
-        // Start Sound
         mediaPlayer = new MediaPlayer();
         try {
             mediaPlayer.setDataSource(this, Uri.parse(alarmSoundUri));
@@ -123,20 +244,19 @@ public class AlarmRingingActivity extends AppCompatActivity {
                             .build()
             );
             mediaPlayer.setLooping(true);
-            mediaPlayer.prepareAsync(); // Prepare asynchronously to not block UI thread
+            mediaPlayer.prepareAsync();
             mediaPlayer.setOnPreparedListener(mp -> {
                 mp.start();
                 Log.d(TAG, "MediaPlayer prepared and started.");
             });
             mediaPlayer.setOnErrorListener((mp, what, extra) -> {
                 Log.e(TAG, "MediaPlayer error: what=" + what + ", extra=" + extra);
-                // Attempt to play default alarm sound as a fallback
                 playFallbackSound();
-                return true; // True if the error has been handled
+                return true;
             });
         } catch (IOException e) {
             Log.e(TAG, "IOException setting data source for MediaPlayer: " + e.getMessage(), e);
-            playFallbackSound(); // Play fallback if specific sound fails
+            playFallbackSound();
         } catch (IllegalArgumentException e) {
             Log.e(TAG, "IllegalArgumentException for sound URI: " + e.getMessage(), e);
             playFallbackSound();
@@ -149,7 +269,7 @@ public class AlarmRingingActivity extends AppCompatActivity {
     private void playFallbackSound() {
         Log.d(TAG, "Attempting to play fallback sound.");
         if (mediaPlayer != null) {
-            mediaPlayer.reset(); // Reset before trying a new source
+            mediaPlayer.reset();
         } else {
             mediaPlayer = new MediaPlayer();
         }
@@ -208,7 +328,6 @@ public class AlarmRingingActivity extends AppCompatActivity {
             Log.d(TAG, "Foreground service notification cancelled.");
         }
 
-        // Stop the foreground service if it's running
         Intent serviceIntent = new Intent(this, AlarmForegroundService.class);
         stopService(serviceIntent);
         Log.d(TAG, "AlarmForegroundService stopped due to dismiss.");
@@ -232,27 +351,25 @@ public class AlarmRingingActivity extends AppCompatActivity {
             Log.d(TAG, "Foreground service notification cancelled.");
         }
 
-        // Stop the foreground service if it's running
         Intent serviceIntent = new Intent(this, AlarmForegroundService.class);
         stopService(serviceIntent);
         Log.d(TAG, "AlarmForegroundService stopped due to snooze.");
 
         long snoozeTime = System.currentTimeMillis() + SNOOZE_DURATION_MS;
 
-        // Determine the name for the snoozed alarm
         String nextSnoozeName;
         if (this.alarmName != null && this.alarmName.endsWith(" (Snoozed)")) {
             nextSnoozeName = this.alarmName;
         } else if (this.alarmName != null) {
             nextSnoozeName = this.alarmName + " (Snoozed)";
         } else {
-            nextSnoozeName = "Alarm (Snoozed)"; // Fallback if original name was somehow null
+            nextSnoozeName = "Alarm (Snoozed)";
         }
 
         Intent snoozeIntent = new Intent(this, AlarmReceiver.class);
         snoozeIntent.setAction("SNOOZE_ALARM_ACTION_" + alarmId);
         snoozeIntent.putExtra("alarmId", alarmId + "_snooze");
-        snoozeIntent.putExtra("name", nextSnoozeName); // Use the corrected name
+        snoozeIntent.putExtra("name", nextSnoozeName);
         snoozeIntent.putExtra("at", snoozeTime);
         snoozeIntent.putExtra("soundUri", alarmSoundUri);
 
@@ -263,7 +380,7 @@ public class AlarmRingingActivity extends AppCompatActivity {
 
         PendingIntent pendingSnoozeBroadcastIntent = PendingIntent.getBroadcast(
                 this,
-                (alarmId != null ? alarmId.hashCode() : System.identityHashCode(this)) + 1, // Unique request code for the broadcast
+                (alarmId != null ? alarmId.hashCode() : System.identityHashCode(this)) + 1,
                 snoozeIntent,
                 pendingIntentFlags
         );
@@ -284,19 +401,17 @@ public class AlarmRingingActivity extends AppCompatActivity {
                 }
                 Log.i(TAG, "Snooze alarm scheduled for ID: " + alarmId + "_snooze" + " at " + new java.util.Date(snoozeTime));
 
-                // Show new notification for snooze
                 if (notificationManager != null) {
                     SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
                     String formattedSnoozeTime = sdf.format(new Date(snoozeTime));
 
-                    // Intent to open the main app when snooze notification is clicked
                     Intent mainAppIntent = getPackageManager().getLaunchIntentForPackage(getPackageName());
                     PendingIntent mainAppPendingIntent = null;
                     if (mainAppIntent != null) {
                         mainAppIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         mainAppPendingIntent = PendingIntent.getActivity(
                                 this,
-                                SNOOZE_NOTIFICATION_ID + 100, // Ensure a unique request code for this PendingIntent
+                                SNOOZE_NOTIFICATION_ID + 100,
                                 mainAppIntent,
                                 PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ? PendingIntent.FLAG_IMMUTABLE : 0)
                         );
@@ -305,13 +420,13 @@ public class AlarmRingingActivity extends AppCompatActivity {
                     }
 
                     NotificationCompat.Builder snoozeNotificationBuilder = new NotificationCompat.Builder(this, AlarmReceiver.ALARM_CHANNEL_ID)
-                            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm) // Replace with your app icon
-                            .setContentTitle(nextSnoozeName) // Use the corrected name for the notification title
+                            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+                            .setContentTitle(nextSnoozeName)
                             .setContentText("Next alarm at " + formattedSnoozeTime)
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                            .setContentIntent(mainAppPendingIntent) // Set the intent to open main app
-                            .setAutoCancel(true) // Dismiss on click
-                            .setSilent(true); // Ensure this informational notification is also silent
+                            .setContentIntent(mainAppPendingIntent)
+                            .setAutoCancel(true)
+                            .setSilent(true);
 
                     notificationManager.notify(SNOOZE_NOTIFICATION_ID, snoozeNotificationBuilder.build());
                     Log.d(TAG, "Snooze notification posted for " + formattedSnoozeTime);
@@ -341,7 +456,6 @@ public class AlarmRingingActivity extends AppCompatActivity {
         if (!isSnoozed) {
             stopAlarmSoundAndVibration();
         }
-        // Ensure service is stopped if activity is destroyed for any other reason and alarm wasn't snoozed
         Intent serviceIntent = new Intent(this, AlarmForegroundService.class);
         stopService(serviceIntent);
         Log.d(TAG, "AlarmForegroundService potentially stopped in onDestroy if not snoozed/dismissed.");
@@ -353,20 +467,58 @@ public class AlarmRingingActivity extends AppCompatActivity {
         super.onNewIntent(intent);
         Log.d(TAG, "onNewIntent called. Activity was already running.");
         setIntent(intent);
+
         alarmId = intent.getStringExtra("alarmId");
         alarmName = intent.getStringExtra("name");
         alarmSoundUri = intent.getStringExtra("soundUri");
+        String uiOptionsJson = intent.getStringExtra("uiOptions");
+
+        Log.d(TAG, "onNewIntent - Received alarmId: " + alarmId + ", alarmName: " + alarmName);
+        Log.d(TAG, "onNewIntent - Received uiOptionsJson: " + (uiOptionsJson != null ? uiOptionsJson : "null"));
+
         if (alarmSoundUri == null || alarmSoundUri.isEmpty()) {
             alarmSoundUri = Settings.System.DEFAULT_ALARM_ALERT_URI.toString();
         }
 
         TextView alarmNameTextView = findViewById(R.id.alarm_name_text_view);
-        if (alarmName != null) {
-            alarmNameTextView.setText(alarmName);
-        } else {
-            alarmNameTextView.setText("Alarm");
+        TextView alarmRingingTitleTextView = findViewById(R.id.alarm_ringing_title);
+        Button dismissButton = findViewById(R.id.dismiss_button);
+        Button snoozeButton = findViewById(R.id.snooze_button);
+        RelativeLayout layout = findViewById(R.id.alarm_ringing_layout);
+
+        alarmRingingTitleTextView.setText(getString(R.string.default_alarm_title_xml));
+        alarmNameTextView.setText(getString(R.string.default_alarm_name_xml));
+        dismissButton.setText(getString(R.string.default_dismiss_button_xml));
+        snoozeButton.setText(getString(R.string.default_snooze_button_xml));
+
+        boolean alarmNameTextWasSetByNewUiOptions = false;
+
+        if (uiOptionsJson != null && !uiOptionsJson.isEmpty()) {
+            try {
+                JSONObject uiOptions = new JSONObject(uiOptionsJson);
+                applyUiOptions(uiOptions, layout, alarmRingingTitleTextView, alarmNameTextView, dismissButton, snoozeButton);
+
+                if (uiOptions.has("alarmNameText") && !uiOptions.optString("alarmNameText").isEmpty()) {
+                    alarmNameTextWasSetByNewUiOptions = true;
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, "Error parsing UI options JSON in onNewIntent", e);
+            }
         }
-        Log.d(TAG, "Updated with new alarm data - ID: " + alarmId + ", Name: " + alarmName);
+
+        if (!alarmNameTextWasSetByNewUiOptions) {
+            if (alarmName != null && !alarmName.isEmpty()) {
+                alarmNameTextView.setText(alarmName);
+            } else {
+                if (alarmNameTextView.getText() == null ||
+                    alarmNameTextView.getText().toString().isEmpty() ||
+                    alarmNameTextView.getText().toString().equals(getString(R.string.default_alarm_name_xml))) {
+                    alarmNameTextView.setText(getString(R.string.default_alarm_name_fallback));
+                }
+            }
+        }
+
+        Log.d(TAG, "onNewIntent - Updated with new alarm data - ID: " + alarmId + ", Displayed Name: " + alarmNameTextView.getText().toString());
 
         stopAlarmSoundAndVibration();
         startAlarmSoundAndVibration();

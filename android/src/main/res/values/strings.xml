@@ -1,0 +1,7 @@
+<resources>
+    <string name="default_alarm_title_xml">Alarm</string>
+    <string name="default_alarm_name_xml">Alarm Name</string>
+    <string name="default_dismiss_button_xml">Dismiss</string>
+    <string name="default_snooze_button_xml">Snooze</string>
+    <string name="default_alarm_name_fallback">Alarm</string>
+</resources>

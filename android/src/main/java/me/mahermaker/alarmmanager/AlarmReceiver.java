@@ -28,6 +28,7 @@ public class AlarmReceiver extends BroadcastReceiver {
         long atTime = intent.getLongExtra("at", System.currentTimeMillis());
         String extraData = intent.getStringExtra("extra");
         String soundUri = intent.getStringExtra("soundUri");
+        String uiOptionsJson = intent.getStringExtra("uiOptions"); // Retrieve uiOptions
 
         Log.i(TAG, "Alarm received! Forwarding to AlarmForegroundService. ID: " + (alarmId != null ? alarmId : "No ID") +
                 ", Name: " + (name != null ? name : "N/A"));
@@ -39,6 +40,9 @@ public class AlarmReceiver extends BroadcastReceiver {
         serviceIntent.putExtra("at", atTime);
         serviceIntent.putExtra("extra", extraData);
         serviceIntent.putExtra("soundUri", soundUri);
+        if (uiOptionsJson != null) {
+            serviceIntent.putExtra("uiOptions", uiOptionsJson); // Forward uiOptions to service
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             context.startForegroundService(serviceIntent);

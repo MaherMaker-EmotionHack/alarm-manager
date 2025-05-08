@@ -2,25 +2,84 @@
 <html lang="en" dir="ltr" class="hydrated">
   <head>
     <meta charset="UTF-8" />
-    <title>Example Capacitor App</title>
+    <title>Alarm Manager Plugin Example</title>
     <meta
       name="viewport"
       content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
     <meta name="format-detection" content="telephone=no" />
+    <link rel="stylesheet" href="./css/style.css"> <!-- Optional: for basic styling -->
   </head>
   <body>
     <main>
-      <h1>Capacitor Test Plugin Project</h1>
+      <h1>Capacitor Alarm Manager Plugin Example</h1>
       <p>
-        This project can be used to test out the functionality of your plugin. Nothing in the
-        <em>example-app/</em> folder will be published to npm when using this template, so you can create away!
+        Use this example to test the alarm-manager plugin functionalities.
       </p>
-      <label for="echoInput">Echo Text:</label>
-      <input type="text" id="echoInput" name="echoInput" value="Hello World!" />
-      <button onclick="testEcho()">Click Me!</button>
-    </main>
 
+      <section>
+        <h2>Permissions</h2>
+        <button id="checkOverlayPermission">Check Overlay Permission</button>
+        <button id="requestOverlayPermission">Request Overlay Permission</button>
+        <p>Overlay Status: <span id="overlayPermissionStatus">Unknown</span></p>
+        <br>
+        <button id="checkExactAlarmPermission">Check Exact Alarm Permission</button>
+        <button id="requestExactAlarmPermission">Request Exact Alarm Permission</button>
+        <p>Exact Alarm Status: <span id="exactAlarmPermissionStatus">Unknown</span></p>
+        <br>
+        <button id="checkNotificationPermission">Check Notification Permission</button>
+        <button id="requestNotificationPermission">Request Notification Permission</button>
+        <p>Notification Status: <span id="notificationPermissionStatus">Unknown</span></p>
+      </section>
+
+      <section>
+        <h2>Schedule Alarm</h2>
+        <div>
+          <label for="alarmId">Alarm ID (integer):</label>
+          <input type="number" id="alarmId" value="1">
+        </div>
+        <div>
+          <label for="alarmTime">Alarm Time:</label>
+          <input type="datetime-local" id="alarmTime">
+        </div>
+        <div>
+          <label for="alarmTitle">Alarm Title (optional):</label>
+          <input type="text" id="alarmTitle" placeholder="My Awesome Alarm">
+        </div>
+        <div>
+          <label for="alarmBody">Alarm Body (optional):</label>
+          <input type="text" id="alarmBody" placeholder="Time to wake up!">
+        </div>
+        <div>
+          <label for="exactAlarm">Schedule Exact Alarm:</label>
+          <input type="checkbox" id="exactAlarm" checked>
+        </div>
+        <button id="scheduleAlarm">Schedule Alarm</button>
+      </section>
+
+      <section>
+        <h2>Manage Existing Alarm</h2>
+        <div>
+          <label for="manageAlarmId">Alarm ID (integer):</label>
+          <input type="number" id="manageAlarmId" value="1">
+        </div>
+        <button id="cancelAlarm">Cancel Alarm</button>
+        <button id="isScheduled">Check if Scheduled</button>
+        <p>Status for ID <span id="checkedAlarmId"></span>: <span id="isScheduledStatus">Unknown</span></p>
+      </section>
+
+      <section>
+        <h2>Alarm Status & Events</h2>
+        <p>Last scheduled alarm ID: <span id="lastScheduledAlarmId">N/A</span></p>
+        <p>Last scheduled time: <span id="lastScheduledTime">N/A</span></p>
+        <h3>Event Log:</h3>
+        <div id="eventLog" style="height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 5px; background-color: #f9f9f9;">
+          <!-- Events will be logged here -->
+        </div>
+      </section>
+
+    </main>
+    <!-- Ensure example.js handles the logic for these UI elements -->
     <script src="./js/example.js" type="module"></script>
   </body>
 </html>
