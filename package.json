@@ -18,12 +18,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MaherMaker-EmotionHack/alarmmanager.git"
+    "url": "git+https://github.com/MaherMaker-EmotionHack/alarm-manager.git"
   },
   "bugs": {
-    "url": "https://github.com/MaherMaker-EmotionHack/alarmmanager/issues"
+    "url": "https://github.com/MaherMaker-EmotionHack/alarm-manager/issues"
   },
-  "homepage": "https://github.com/MaherMaker-EmotionHack/alarmmanager",
+  "homepage": "https://github.com/MaherMaker-EmotionHack/alarm-manager#readme",
   "keywords": [
     "capacitor",
     "plugin",
