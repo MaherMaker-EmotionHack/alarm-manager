@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="@android:color/white"
+    tools:context=".AlarmRingingActivity">
+
+    <TextView
+        android:id="@+id/alarm_ringing_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Alarm"
+        android:textSize="32sp"
+        android:textStyle="bold"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="64dp"
+        android:textColor="@android:color/black"/>
+
+    <TextView
+        android:id="@+id/alarm_name_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/alarm_ringing_title"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:text="Alarm Name"
+        android:textSize="24sp"
+        android:textColor="@android:color/darker_gray"/>
+
+    <!-- Optional: Add an icon or image here -->
+    <!--
+    <ImageView
+        android:id="@+id/alarm_icon"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_below="@id/alarm_name_text_view"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="32dp"
+        android:src="@drawable/ic_alarm_large" // You'll need to create this drawable
+        app:tint="@color/colorPrimary" />
+    -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="48dp"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/snooze_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Snooze"
+            android:textSize="18sp"
+            android:padding="16dp"
+            android:layout_marginEnd="8dp"
+            android:backgroundTint="@color/colorAccent"
+            android:textColor="@android:color/white"/>
+            <!-- Use android:backgroundTint for MaterialButton or app:backgroundTint for AppCompatButton -->
+            <!-- For older versions, you might need a custom drawable background -->
+
+
+        <Button
+            android:id="@+id/dismiss_button"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Dismiss"
+            android:textSize="18sp"
+            android:padding="16dp"
+            android:layout_marginStart="8dp"
+            android:backgroundTint="@color/colorPrimary"
+            android:textColor="@android:color/white"/>
+            <!-- Use android:backgroundTint for MaterialButton or app:backgroundTint for AppCompatButton -->
+
+    </LinearLayout>
+
+</RelativeLayout>
